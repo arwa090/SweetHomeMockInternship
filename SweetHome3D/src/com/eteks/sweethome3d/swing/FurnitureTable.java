@@ -750,11 +750,36 @@ public class FurnitureTable extends JTable implements View, Printable {
           return headerRendererLabel;
         }
       };
-    for (int columnIndex = 0, n = columnModel.getColumnCount(); columnIndex < n; columnIndex++) {
-      final TableColumn tableColumn = columnModel.getColumn(columnIndex);
+    FurnitureTableColumnModel furnitureColumnModel =
+            (FurnitureTableColumnModel) columnModel;
+
+    TableColumn levelColumn = furnitureColumnModel.getAvailableColumn(
+            HomePieceOfFurniture.SortableProperty.LEVEL);
+
+    boolean levelAlreadyVisible = false;
+
+    for (int i = 0; i < columnModel.getColumnCount(); i++) {
+      if (columnModel.getColumn(i).getIdentifier()
+              == HomePieceOfFurniture.SortableProperty.LEVEL) {
+        levelAlreadyVisible = true;
+        break;
+      }
+    }
+
+    int printableColumnCount = columnModel.getColumnCount()
+            + (levelAlreadyVisible ? 0 : 1);
+
+    for (int columnIndex = 0;
+         columnIndex < printableColumnCount; columnIndex++) {
+
+      final TableColumn tableColumn =
+              columnIndex < columnModel.getColumnCount()
+                      ? columnModel.getColumn(columnIndex)
+                      : levelColumn;
       // Create a printable column from existing table column
       TableColumn printableColumn = new TableColumn();
       printableColumn.setIdentifier(tableColumn.getIdentifier());
+      printableColumn.setModelIndex(tableColumn.getModelIndex());
       printableColumn.setHeaderValue(tableColumn.getHeaderValue());
       TableCellRenderer printableCellRenderer = new TableCellRenderer() {
           public Component getTableCellRendererComponent(JTable table, Object value, 
@@ -1010,6 +1035,10 @@ public class FurnitureTable extends JTable implements View, Printable {
   private static class FurnitureTableColumnModel extends DefaultTableColumnModel {
     private Map<HomePieceOfFurniture.SortableProperty, TableColumn> availableColumns;
 
+    public TableColumn getAvailableColumn(
+            HomePieceOfFurniture.SortableProperty property) {
+      return this.availableColumns.get(property);
+    }
     public FurnitureTableColumnModel(Home home, UserPreferences preferences) {
       createAvailableColumns(home, preferences);
       addHomeListener(home);
